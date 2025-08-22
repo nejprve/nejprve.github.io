@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Keep-like Checkboxes (GitHub Pages – fix)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <noscript>
+    <div style="background:#ffebee;color:#b71c1c;padding:10px;border-bottom:1px solid #b71c1c;font-family:sans-serif">
+      Tato aplikace vyžaduje JavaScript.
+    </div>
+  </noscript>
+
+  <div class="app" id="keepApp">
+    <header class="bar">
+      <h1>Keep‑like Checkboxes</h1>
+      <div class="composer">
+        <input id="newText" placeholder="Přidej poznámku a stiskni Enter…" autocomplete="off" />
+        <button class="btn" id="addBtn" type="button">Přidat</button>
+        <button class="btn subtle" id="addSampleBtn" type="button">Přidat ukázku</button>
+      </div>
+    </header>
+    <main>
+      <ul class="list" id="todoList" aria-label="Nedokončené"></ul>
+      <hr aria-hidden="true" />
+      <ul class="list" id="doneList" aria-label="Dokončené"></ul>
+      <p class="empty" id="emptyMsg" hidden>Začni přidáním poznámky ✨</p>
+    </main>
+  </div>
+
+  <div id="fatalBanner" class="fatal" hidden>
+    ⚠️ Něco zablokovalo běh JavaScriptu. Zkus vypnout rozšíření blokátoru nebo otevřít v jiném prohlížeči. (Podrobnosti v konzoli F12)
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
