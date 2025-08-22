@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Keep-like Notes – plná verze (GitHub Pages)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <noscript>
+    <div class="nojs">Tato aplikace vyžaduje JavaScript.</div>
+  </noscript>
+
+  <div class="app" id="keepApp">
+    <header class="bar">
+      <h1>Keep‑like Notes</h1>
+
+      <div class="controls">
+        <label class="ctl">
+          Filtr štítku:
+          <select id="filterTag">
+            <option value="all">Vše</option>
+            <option value="skola">Škola</option>
+            <option value="domov">Domov</option>
+            <option value="seberozvoj">Seberozvoj</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="autoexp">
+        <label class="ctl switch">
+          <input type="checkbox" id="autoExportToggle" />
+          <span>Auto‑export</span>
+        </label>
+        <button class="btn small" id="pickFileBtn" type="button" title="Vybrat cílový soubor pro auto‑export">Zvolit soubor…</button>
+        <span class="hint" id="autoExportHint"></span>
+      </div>
+
+      <button class="btn small" id="exportBtn" type="button" title="Exportovat poznámky do JSON">Export</button>
+      <label for="importFile" class="btn small" title="Importovat poznámky z JSON">Import</label>
+      <input id="importFile" type="file" accept="application/json" hidden />
+    </header>
+
+    <div class="composer">
+      <input id="newText" placeholder="Přidej poznámku a stiskni Enter…" autocomplete="off" />
+      <select id="newTag" title="Štítek">
+        <option value="skola">Škola</option>
+        <option value="domov" selected>Domov</option>
+        <option value="seberozvoj">Seberozvoj</option>
+      </select>
+      <button class="btn" id="addBtn" type="button" title="Přidat">Přidat</button>
+    </div>
+
+    <main>
+      <ul class="list" id="todoList" aria-label="Nedokončené"></ul>
+      <hr aria-hidden="true" />
+      <ul class="list" id="doneList" aria-label="Dokončené"></ul>
+      <p class="empty" id="emptyMsg" hidden>Začni přidáním poznámky ✨</p>
+    </main>
+  </div>
+
+  <!-- Dialog pro úpravu času -->
+  <dialog id="timeDialog">
+    <form method="dialog" class="dlg" id="timeForm">
+      <h2>Upravit časy</h2>
+      <label>Vložené:
+        <input type="datetime-local" id="dlgCreated" />
+      </label>
+      <label>Splněno:
+        <input type="datetime-local" id="dlgCompleted" />
+      </label>
+      <p class="dlg-error" id="dlgError" hidden>Čas dokončení nemůže být dřívější než čas vložení.</p>
+      <p class="dlg-info" id="dlgInfo" hidden>Událost se ještě nestala, ale pokud chceš... BUDIŠ!</p>
+      <div class="dlg-actions">
+        <button value="cancel" class="btn outline">Zrušit</button>
+        <button id="dlgSave" class="btn">Uložit</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Dialog potvrzení smazání -->
+  <dialog id="confirmDialog">
+    <form method="dialog" class="dlg small" id="confirmForm">
+      <h2>Opravdu smazat?</h2>
+      <p id="confirmText">Tato akce je nevratná.</p>
+      <div class="dlg-actions">
+        <button class="btn outline" value="no">NE</button>
+        <button class="btn danger" value="yes">ANO</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="fatalBanner" class="fatal" hidden>
+    ⚠️ Něco zablokovalo běh JavaScriptu. Zkus vypnout rozšíření blokátoru nebo otevřít v jiném prohlížeči. (Detaily v konzoli F12)
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
