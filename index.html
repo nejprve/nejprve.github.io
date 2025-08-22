@@ -1,93 +1,257 @@
 <!doctype html>
-<html lang="cs">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Keep-like Checkboxes (auto‑export)</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Very Simple To‑Do (JSON Import/Export)</title>
+  <style>
+    :root { --gap: 10px; --radius: 12px; }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: #f6f7f9; color: #111; display: grid; place-items: start center;
+    }
+    .app {
+      width: min(900px, 100%); padding: 24px; margin: 24px; background: #fff; border-radius: var(--radius);
+      box-shadow: 0 6px 20px rgba(0,0,0,.08);
+    }
+    header { display: flex; flex-wrap: wrap; gap: var(--gap); align-items: center; justify-content: space-between; }
+    header h1 { font-size: 20px; margin: 0; }
+    .row { display: flex; flex-wrap: wrap; gap: var(--gap); align-items: center; }
+    input[type="text"] {
+      flex: 1 1 260px; padding: 10px 12px; border: 1px solid #d0d7de; border-radius: 10px;
+    }
+    button, label.button {
+      padding: 10px 12px; border: 1px solid #d0d7de; border-radius: 10px; background: #fafbfc; cursor: pointer;
+    }
+    button:hover, label.button:hover { background: #f0f2f4; }
+    button.primary { background: #2563eb; color: white; border-color: #2563eb; }
+    button.primary:hover { filter: brightness(.95); }
+    .list { margin-top: 16px; display: grid; gap: 8px; }
+    .item { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; padding: 8px; border: 1px solid #e5e7eb; border-radius: 10px; }
+    .item.done .text { text-decoration: line-through; color: #6b7280; }
+    .item .text { padding: 6px 8px; border-radius: 8px; }
+    .item .actions { display: flex; gap: 6px; }
+    .muted { color: #6b7280; }
+    details.panel { margin-top: 20px; border: 1px solid #e5e7eb; border-radius: 10px; }
+    details.panel > summary { padding: 10px 12px; cursor: pointer; }
+    details.panel > div { border-top: 1px solid #e5e7eb; padding: 12px; display: grid; gap: 12px; }
+    textarea { width: 100%; min-height: 120px; padding: 10px; border: 1px solid #d0d7de; border-radius: 10px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    pre.json { margin: 0; max-height: 260px; overflow: auto; background: #0b1021; color: #e5f4ff; padding: 12px; border-radius: 8px; }
+    .footer { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .count { font-weight: 600; }
+  </style>
 </head>
 <body>
-  <div class="app" id="keepApp">
-    <header class="bar">
-      <h1>Keep‑like Checkboxes</h1>
-
-      <div class="controls">
-        <label class="ctl">
-          Filtr štítku:
-          <select id="filterTag">
-            <option value="all">Vše</option>
-            <option value="skola">Škola</option>
-            <option value="domov">Domov</option>
-            <option value="seberozvoj">Seberozvoj</option>
-          </select>
-        </label>
+  <div class="app" role="application">
+    <header>
+      <h1>Very Simple To‑Do</h1>
+      <div class="row">
+        <button id="exportBtn" title="Download tasks as JSON">Export JSON</button>
+        <label class="button" for="importFile" title="Import from a .json file">Import JSON (file)</label>
+        <input id="importFile" type="file" accept="application/json" hidden>
+        <button id="clearBtn" title="Remove all tasks">Clear All</button>
       </div>
-
-      <div class="spacer"></div>
-
-      <div class="autoexp">
-        <label class="ctl switch">
-          <input type="checkbox" id="autoExportToggle" />
-          <span>Auto‑export</span>
-        </label>
-        <button class="btn small" id="pickFileBtn" type="button" title="Vybrat cílový soubor pro auto‑export">Zvolit soubor…</button>
-        <span class="hint" id="autoExportHint"></span>
-      </div>
-
-      <button class="btn small" id="exportBtn" type="button" title="Exportovat poznámky do JSON">Export</button>
-      <label for="importFile" class="btn small" title="Importovat poznámky z JSON">Import</label>
-      <input id="importFile" type="file" accept="application/json" hidden />
     </header>
 
-    <div class="composer">
-      <input id="newText" placeholder="Přidej poznámku a stiskni Enter…" autocomplete="off" />
-      <select id="newTag" title="Štítek">
-        <option value="skola">Škola</option>
-        <option value="domov" selected>Domov</option>
-        <option value="seberozvoj">Seberozvoj</option>
-      </select>
-      <button class="btn" id="addBtn" type="button" title="Přidat">Přidat</button>
+    <div class="row" style="margin-top:14px">
+      <label for="newText" class="muted">New task</label>
+      <input id="newText" type="text" placeholder="e.g., Buy milk" autocomplete="off" />
+      <button id="addBtn" class="primary">Add</button>
+      <button id="add10" title="Add 10 sample tasks">+10 sample</button>
     </div>
 
-    <main>
-      <ul class="list" id="todoList" aria-label="Nedokončené"></ul>
-      <hr aria-hidden="true" />
-      <ul class="list" id="doneList" aria-label="Dokončené"></ul>
-      <p class="empty" id="emptyMsg" hidden>Začni přidáním poznámky ✨</p>
-    </main>
+    <div class="footer">
+      <div class="muted">Tip: You can also paste JSON in the panel below to import.</div>
+      <div class="count" id="count"></div>
+    </div>
+
+    <div class="list" id="list" aria-live="polite"></div>
+
+    <details class="panel">
+      <summary>Import / Inspect JSON</summary>
+      <div>
+        <div class="row">
+          <button id="importTextareaBtn">Import from text</button>
+          <button id="copyJsonBtn" title="Copy current JSON to clipboard">Copy current JSON</button>
+        </div>
+        <textarea id="jsonTextarea" placeholder='Paste an array of tasks here (see format below).'></textarea>
+        <div class="muted">Format: <code>[{ id, text, done, createdAt }]</code></div>
+        <pre class="json" id="jsonDump" aria-label="Current tasks as JSON"></pre>
+      </div>
+    </details>
   </div>
 
-  <!-- Dialog pro úpravu času -->
-  <dialog id="timeDialog">
-    <form method="dialog" class="dlg" id="timeForm">
-      <h2>Upravit časy</h2>
-      <label>Vložené:
-        <input type="datetime-local" id="dlgCreated" />
-      </label>
-      <label>Splněno:
-        <input type="datetime-local" id="dlgCompleted" />
-      </label>
-      <p class="dlg-error" id="dlgError" hidden>Čas dokončení nemůže být dřívější než čas vložení.</p>
-      <p class="dlg-info" id="dlgInfo" hidden>Událost se ještě nestala, ale pokud chceš... BUDIŠ!</p>
-      <div class="dlg-actions">
-        <button value="cancel" class="btn outline">NE</button>
-        <button id="dlgSave" class="btn">Uložit</button>
-      </div>
-    </form>
-  </dialog>
+<script>
+(function() {
+  const STORAGE_KEY = 'todo-data-v1';
+  /** @type {{id:string,text:string,done:boolean,createdAt:string}[]} */
+  let tasks = load();
 
-  <!-- Dialog potvrzení smazání -->
-  <dialog id="confirmDialog">
-    <form method="dialog" class="dlg small" id="confirmForm">
-      <h2>Opravdu smazat?</h2>
-      <p id="confirmText">Tato akce je nevratná.</p>
-      <div class="dlg-actions">
-        <button class="btn outline" value="no">NE</button>
-        <button class="btn danger" value="yes">ANO</button>
-      </div>
-    </form>
-  </dialog>
+  // Elements
+  const listEl = document.getElementById('list');
+  const newTextEl = document.getElementById('newText');
+  const countEl = document.getElementById('count');
+  const jsonDumpEl = document.getElementById('jsonDump');
+  const jsonTextareaEl = document.getElementById('jsonTextarea');
 
-  <script src="app.js" defer></script>
+  // Buttons
+  document.getElementById('addBtn').addEventListener('click', addFromInput);
+  document.getElementById('add10').addEventListener('click', addSamples);
+  document.getElementById('clearBtn').addEventListener('click', clearAll);
+  document.getElementById('exportBtn').addEventListener('click', downloadJson);
+  document.getElementById('copyJsonBtn').addEventListener('click', copyJson);
+  document.getElementById('importTextareaBtn').addEventListener('click', importFromTextarea);
+
+  // File import
+  document.getElementById('importFile').addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try { importJson(JSON.parse(reader.result)); }
+      catch (err) { alert('Invalid JSON in file.'); }
+      e.target.value = '';
+    };
+    reader.readAsText(file);
+  });
+
+  // Keyboard add
+  newTextEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addFromInput();
+  });
+
+  // Drag & drop JSON onto the page
+  document.addEventListener('dragover', (e) => { e.preventDefault(); });
+  document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const file = e.dataTransfer?.files?.[0];
+    if (file && file.type.includes('json')) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try { importJson(JSON.parse(reader.result)); }
+        catch { alert('Invalid JSON in dropped file.'); }
+      };
+      reader.readAsText(file);
+    }
+  });
+
+  // Initial render
+  render();
+
+  // --- Functions ---
+  function addFromInput() {
+    const text = newTextEl.value.trim();
+    if (!text) return;
+    tasks.unshift(newTask(text));
+    newTextEl.value = '';
+    persist();
+    render();
+  }
+
+  function addSamples() {
+    const base = ['Buy milk', 'Read a book', 'Walk the dog', 'Email Alex', 'Water plants', 'Clean desk', 'Pay bills', 'Call mom', 'Workout', 'Plan trip'];
+    tasks = [...base.map(t => newTask(t)), ...tasks];
+    persist();
+    render();
+  }
+
+  function newTask(text) {
+    return { id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()+Math.random()), text, done: false, createdAt: new Date().toISOString() };
+  }
+
+  function toggle(id) {
+    const t = tasks.find(x => x.id === id); if (!t) return; t.done = !t.done; persist(); render();
+  }
+
+  function remove(id) {
+    tasks = tasks.filter(x => x.id !== id); persist(); render();
+  }
+
+  function clearAll() {
+    if (!confirm('Delete ALL tasks?')) return;
+    tasks = []; persist(); render();
+  }
+
+  function importFromTextarea() {
+    try { const data = JSON.parse(jsonTextareaEl.value); importJson(data); }
+    catch { alert('Invalid JSON in textarea.'); }
+  }
+
+  function importJson(data) {
+    if (!Array.isArray(data)) { alert('Expected an array of tasks.'); return; }
+    // Validate and coerce
+    const cleaned = data.map((t, i) => ({
+      id: String(t.id ?? (crypto.randomUUID ? crypto.randomUUID() : 'item-'+i+'-'+Date.now())),
+      text: String(t.text ?? ''),
+      done: Boolean(t.done),
+      createdAt: new Date(t.createdAt || Date.now()).toISOString(),
+    })).filter(t => t.text.trim().length > 0);
+    tasks = cleaned;
+    persist();
+    render();
+  }
+
+  function downloadJson() {
+    const blob = new Blob([JSON.stringify(tasks, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const date = new Date().toISOString().slice(0,10);
+    a.href = url; a.download = `todos-${date}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async function copyJson() {
+    try { await navigator.clipboard.writeText(JSON.stringify(tasks, null, 2)); alert('Copied!'); }
+    catch { alert('Copy failed.'); }
+  }
+
+  function load() {
+    try { const raw = localStorage.getItem(STORAGE_KEY); return raw ? JSON.parse(raw) : []; }
+    catch { return []; }
+  }
+
+  function persist() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+  }
+
+  function render() {
+    // Counts
+    const done = tasks.filter(t => t.done).length;
+    countEl.textContent = `${tasks.length} total • ${done} completed • ${tasks.length - done} remaining`;
+
+    // List
+    listEl.innerHTML = '';
+    tasks.forEach(t => {
+      const el = document.createElement('div');
+      el.className = 'item' + (t.done ? ' done' : '');
+
+      const cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = t.done; cb.setAttribute('aria-label', 'Mark done');
+      cb.addEventListener('change', () => toggle(t.id));
+
+      const text = document.createElement('div'); text.className = 'text'; text.textContent = t.text;
+      text.title = new Date(t.createdAt).toLocaleString();
+      text.contentEditable = 'true';
+      text.addEventListener('blur', () => { t.text = text.textContent.trim(); persist(); renderJsonDump(); });
+      text.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); text.blur(); } });
+
+      const actions = document.createElement('div'); actions.className = 'actions';
+      const del = document.createElement('button'); del.textContent = 'Delete'; del.addEventListener('click', () => remove(t.id));
+      actions.appendChild(del);
+
+      el.appendChild(cb); el.appendChild(text); el.appendChild(actions);
+      listEl.appendChild(el);
+    });
+
+    renderJsonDump();
+  }
+
+  function renderJsonDump() {
+    jsonDumpEl.textContent = JSON.stringify(tasks, null, 2);
+  }
+})();
+</script>
 </body>
 </html>
